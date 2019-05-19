@@ -3,14 +3,16 @@
   <PropertyGroup>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFrameworks>net461;netcoreapp2.2</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>4.0.0</Version>
-    <Authors>RupertAvery</Authors>
-    <Company>EnderSoft</Company>
+    <Authors>David Khristepher Santos</Authors>
+    <Company></Company>
     <Description>An MVC API framework for Chromely</Description>
-    <Copyright>RupertAvery 2019</Copyright>
+    <Copyright>David Khristepher Santos 2019</Copyright>
     <PackageTags>Chromely Mvc</PackageTags>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/RupertAvery/Chromely.Mvc</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +26,10 @@
     <Reference Include="Microsoft.Extensions.DependencyInjection">
       <HintPath>..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.extensions.dependencyinjection\2.2.0\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>

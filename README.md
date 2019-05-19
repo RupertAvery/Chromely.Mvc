@@ -2,6 +2,12 @@
 
 Chromely.Mvc is an add-on to [Chromely](https://github.com/chromelyapps/Chromely) that allows you to create controllers using ASP.NET MVC conventions.
 
+# Nuget
+
+```
+Install-Package Chromely.Mvc
+```
+
 # Features
 * Use MVC's convention-based approach to writing and wiring up controllers.
 * Use .NET Core's built-in `IServiceCollection` for dependency injection.

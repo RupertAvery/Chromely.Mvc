@@ -100,9 +100,13 @@ MvcConfigurationBuilder
 
 using (var window = ChromelyWindow.Create(config))
 {
-// nothing else needed here, controllers are registered during WithControllersAssembly
+	// nothing else needed here, UseControllersFromAssembly registers controllers and 
+	// UseDefaultMvcBoundObject() sets up the entry point for the controllers when requests come in
+	return window.Run(args);
 }
 ```
+
+# Configuration Details
 
 `MvcConfigurationBuilder.Create()` internally creates an `IServiceCollection`.
 

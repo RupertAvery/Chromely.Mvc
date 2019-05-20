@@ -21,19 +21,19 @@ namespace Tests
         }
 
         [Test]
-        public void NonExisitantRoute()
+        public void NonExisitantRouteReturns404()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
 
             var result = boundObject.GetJson("/nonExistantController/nonExistantUrl", null);
 
             var response = JsonConvert.DeserializeObject<Response>(result);
-            Assert.AreEqual(500, response.Status);
+            Assert.AreEqual(404, response.Status);
         }
 
 
         [Test]
-        public void NonExisitantAction()
+        public void NonExisitantActionReturns404()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
 
@@ -41,12 +41,12 @@ namespace Tests
 
             var response = JsonConvert.DeserializeObject<Response>(result);
 
-            Assert.AreEqual(500, response.Status);
+            Assert.AreEqual(404, response.Status);
             Assert.Pass();
         }
 
         [Test]
-        public void GetUrlTest()
+        public void GetMethodWithQueryStringParameters()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
 
@@ -57,7 +57,7 @@ namespace Tests
         }
 
         [Test]
-        public void ParameterTest()
+        public void GetMethodWithParameterObject()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
             var json = "{ name: 'Rupert Avery', age: 21, birthdate: '1982-06-12' }";
@@ -68,9 +68,41 @@ namespace Tests
             Assert.AreEqual(200, response.Status);
         }
 
+        [Test]
+        public void CustomAction()
+        {
+            var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
+            var result = boundObject.GetJson("/test/custom-action", null);
+
+            var response = JsonConvert.DeserializeObject<Response>(result);
+            Assert.AreEqual(200, response.Status);
+        }
 
         [Test]
-        public void PostTest()
+        public void GetRequestWithNoActionDefaultsToIndex()
+        {
+            var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
+            var result = boundObject.GetJson("/test", null);
+
+            var response = JsonConvert.DeserializeObject<Response>(result);
+            Assert.AreEqual(200, response.Status);
+        }
+
+        [Test]
+        public void PostRequestWithNoActionDefaultsToPost()
+        {
+            var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
+            var json = "{ name: 'Rupert Avery', age: 21, birthdate: '1982-06-12' }";
+
+            var result = boundObject.PostJson("/test", null, json.ToExpandoObject());
+            
+            var response = JsonConvert.DeserializeObject<Response>(result);
+            Assert.AreEqual(200, response.Status);
+        }
+
+
+        [Test]
+        public void PostRequestWithJsonBody()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
             var json = "{ name: 'Rupert Avery', age: 21, birthdate: '1982-06-12' }";
@@ -82,7 +114,7 @@ namespace Tests
         }
 
         [Test]
-        public void PostArrayTest()
+        public void PostRequestWithJsonArrayBody()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
             var json = "[{ name: 'Rupert Avery', age: 21, birthdate: '1982-06-12' }, { name: 'Jemma Avery', age: 18, birthdate: '1989-08-27' }]";
@@ -94,7 +126,7 @@ namespace Tests
         }
 
         [Test]
-        public void ComplexObjectTest()
+        public void PostRequestWithObjectGraph()
         {
             var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
             var json = @"

@@ -8,6 +8,26 @@ namespace Tests
 {
     public class TestController : Controller
     {
+        [HttpGet]
+        public void Index()
+        {
+            // Do nothing
+        }
+
+        [HttpGet("custom-action")]
+        public void CustomActionTest()
+        {
+            // Do nothing
+        }
+
+        public void Post(Person person)
+        {
+            if (person.Name != "Rupert Avery" || person.Age != 21 || person.BirthDate != new DateTime(1982, 06, 12))
+            {
+                throw new Exception("Test failed!");
+            }
+        }
+
 
         [HttpGet]
         public void GetUrl(string name, int age, DateTime birthdate)

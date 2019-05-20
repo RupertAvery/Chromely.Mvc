@@ -25,7 +25,7 @@ namespace Chromely.Mvc
                 .AddSingleton<IActionBuilder, DefaultActionBuilder>()
                 .AddSingleton<IModelBinder, DefaultModelBinder>()
                 .AddSingleton<IControllerActivator, DefaultControllerActivator>()
-                .AddSingleton<IRouteResolver, RouteResolver>()
+                .AddSingleton<IRouteResolver, DefaultRouteResolver>()
                 .AddSingleton<IRequestHandler, DefaultRequestHandler>();
 
             routeAction(routeCollection);

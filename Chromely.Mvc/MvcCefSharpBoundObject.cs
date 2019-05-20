@@ -145,6 +145,12 @@ namespace Chromely.Mvc
                 ReadyState = 4,
                 Status = 500,
             };
+
+            if (ex is RouteException)
+            {
+                response.Status = 404;
+            }
+
             var jsonResponse = JsonConvert.SerializeObject(response);
 
             return jsonResponse;

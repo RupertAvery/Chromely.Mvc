@@ -132,7 +132,7 @@ namespace Chromely.Mvc
 
             if (isPost)
             {
-                if (postData is ExpandoObject || postData is List<ExpandoObject>)
+                if (postData is ExpandoObject || postData is List<ExpandoObject> || postData is List<Object>)
                 {
                     if (actionParameters.Length == 1)
                     {

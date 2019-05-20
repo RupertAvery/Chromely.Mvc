@@ -24,8 +24,8 @@ namespace Chromely.Mvc
             foreach (Route route in _routeCollection)
             {
                 var routePattern = route.RoutePath
-                    .Replace("{controller}", "(?<controller>[a-zA-Z0-9-.]+)")
-                    .Replace("{action}", "(?<action>[a-zA-Z0-9-.]+)");
+                    .Replace("/{controller}", "(?:/(?<controller>[a-zA-Z0-9-.]+)?)?")
+                    .Replace("/{action}", "(?:/(?<action>[a-zA-Z0-9-.]+)?)?");
 
                 var routeRegex = new Regex(routePattern, RegexOptions.IgnoreCase);
 

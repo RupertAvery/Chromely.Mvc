@@ -100,7 +100,11 @@ namespace Chromely.Mvc
 
             if (action.IsAsync)
             {
-                result = await (Task<object>)action.Invoke(arguments);
+                var asyncObject = (Task)action.Invoke(arguments);
+                var taskType = asyncObject.GetType();
+                await asyncObject.ConfigureAwait(false);
+                var resultProperty = taskType.GetProperty("Result");
+                result = resultProperty.GetValue(asyncObject);
             }
             else
             {

@@ -35,9 +35,7 @@ namespace Chromely.Mvc
                             Status = 200,
                         };
 
-                        var jsonResponse = JsonConvert.SerializeObject(response);
-
-                        await javascriptCallback.ExecuteAsync(jsonResponse);
+                        await javascriptCallback.ExecuteAsync(response);
                     }
                     catch (Exception ex)
                     {
@@ -87,9 +85,7 @@ namespace Chromely.Mvc
                             Status = 200,
                         };
 
-                        var jsonResponse = JsonConvert.SerializeObject(response);
-
-                        await javascriptCallback.ExecuteAsync(jsonResponse);
+                        await javascriptCallback.ExecuteAsync(response);
                     }
                     catch (Exception ex)
                     {

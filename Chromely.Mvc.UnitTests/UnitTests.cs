@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Chromely.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -52,7 +56,7 @@ namespace Tests
 
             var result = boundObject.GetJson("/test/getUrl?name=Rupert+Avery&age=21&birthdate=1982-06-12", null);
 
-            var response =JsonConvert.DeserializeObject<Response>(result);
+            var response = JsonConvert.DeserializeObject<Response>(result);
             Assert.AreEqual(200, response.Status);
         }
 
@@ -95,7 +99,7 @@ namespace Tests
             var json = "{ name: 'Rupert Avery', age: 21, birthdate: '1982-06-12' }";
 
             var result = boundObject.PostJson("/test", null, json.ToExpandoObject());
-            
+
             var response = JsonConvert.DeserializeObject<Response>(result);
             Assert.AreEqual(200, response.Status);
         }
@@ -143,5 +147,40 @@ namespace Tests
             var response = JsonConvert.DeserializeObject<Response>(result);
             Assert.AreEqual(200, response.Status);
         }
+
+        [Test]
+        public async Task GetValueFromAsyncMethod()
+        {
+            var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
+
+            var callback = new TestJavascriptCallback();
+
+            boundObject.GetJson("/test/getPersonAsync", null, callback);
+
+            var response = await callback.ResultTask;
+
+            var person = (Person)((Response)response[0]).Data;
+
+            Assert.AreEqual("Rupert Avery", person.Name);
+            Assert.AreEqual(21, person.Age);
+            Assert.AreEqual(new DateTime(1982, 06, 12), person.BirthDate);
+        }
+
+        [Test]
+        public async Task GetEnumerableFromAsyncMethod()
+        {
+            var boundObject = serviceCollection.BuildServiceProvider().GetService<MvcCefSharpBoundObject>();
+
+            var callback = new TestJavascriptCallback();
+
+            boundObject.GetJson("/test/getPeopleAsync", null, callback);
+
+            var response = await callback.ResultTask;
+
+            var people = (IEnumerable<Person>)((Response)response[0]).Data;
+
+            Assert.AreEqual(2, people.Count());
+        }
+
     }
 }

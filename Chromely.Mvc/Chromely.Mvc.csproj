@@ -5,7 +5,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <TargetFrameworks>net461;netcoreapp2.2</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>4.0.0.1</Version>
+    <Version>4.0.0.2</Version>
     <Authors>David Khristepher Santos</Authors>
     <Company></Company>
     <Description>An MVC API framework for Chromely</Description>
@@ -13,6 +13,7 @@
     <PackageTags>Chromely Mvc</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <RepositoryUrl>https://github.com/RupertAvery/Chromely.Mvc</RepositoryUrl>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

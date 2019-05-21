@@ -43,33 +43,29 @@ namespace Chromely.Mvc
                     }
                     else
                     {
-                        if (requestContext.Method == Methods.Get)
+                        switch (requestContext.Method)
                         {
-                            actions = new[] { "index", "get" };
-                        }
-                        else if (requestContext.Method == Methods.Post)
-                        {
-                            actions = new[] { "post" };
-                        }
-                        else if (requestContext.Method == Methods.Put)
-                        {
-                            actions = new[] { "put" };
-                        }
-                        else if (requestContext.Method == Methods.Delete)
-                        {
-                            actions = new[] { "delete" };
-                        }
-                        else if (requestContext.Method == Methods.Options)
-                        {
-                            actions = new[] { "options" };
-                        }
-                        else if (requestContext.Method == Methods.Head)
-                        {
-                            actions = new[] { "head" };
-                        }
-                        else if (requestContext.Method == Methods.Merge)
-                        {
-                            actions = new[] { "merge" };
+                            case Methods.Get:
+                                actions = new[] { "index", "get" };
+                                break;
+                            case Methods.Post:
+                                actions = new[] { "post" };
+                                break;
+                            case Methods.Put:
+                                actions = new[] { "put" };
+                                break;
+                            case Methods.Delete:
+                                actions = new[] { "delete" };
+                                break;
+                            case Methods.Options:
+                                actions = new[] { "options" };
+                                break;
+                            case Methods.Head:
+                                actions = new[] { "head" };
+                                break;
+                            case Methods.Merge:
+                                actions = new[] { "merge" };
+                                break;
                         }
                     }
 

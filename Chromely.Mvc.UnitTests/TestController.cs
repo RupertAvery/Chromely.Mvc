@@ -3,6 +3,7 @@ using Chromely.Mvc.Attributes;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -79,7 +80,7 @@ namespace Tests
         [HttpPost]
         public void ComplexObjectTest(Event evt)
         {
-            if(evt.Activity != "Swimming")
+            if (evt.Activity != "Swimming")
             {
                 throw new Exception("Test failed!");
             }
@@ -107,6 +108,54 @@ namespace Tests
                 throw new Exception("Test failed!");
             }
         }
+
+        [HttpGet]
+        public Person GetPerson()
+        {
+            var person = new Person()
+            {
+                Name = "Rupert Avery",
+                Age = 21,
+                BirthDate = new DateTime(1982, 06, 12)
+            };
+
+            return person;
+        }
+
+        [HttpGet]
+        public Task<Person> GetPersonAsync()
+        {
+            return Task.FromResult(GetPerson());
+        }
+
+        [HttpGet]
+        public IEnumerable<Person> GetPeople()
+        {
+            var results = new List<Person>()
+            {
+                new Person()
+                {
+                    Name = "Rupert Avery",
+                    Age = 21,
+                    BirthDate = new DateTime(1982, 06, 12)
+                },
+                new Person()
+                {
+                    Name = "Jemma Avery",
+                    Age = 18,
+                    BirthDate = new DateTime(1989, 08, 27)
+                }
+            };
+
+            return results;
+        }
+
+        [HttpGet]
+        public Task<IEnumerable<Person>> GetPeopleAsync()
+        {
+            return Task.FromResult(GetPeople());
+        }
+
 
     }
 }

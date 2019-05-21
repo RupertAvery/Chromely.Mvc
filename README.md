@@ -8,6 +8,11 @@ Chromely.Mvc is an add-on to [Chromely](https://github.com/chromelyapps/Chromely
 Install-Package Chromely.Mvc
 ```
 
+# Known Issues
+
+Versions 4.0.0.1 and below have an issue where the returned value from the `boundControllerAsync` response callback is a string instead of an object. See the [Javascript](#Javascript) section.
+
+
 # Features
 * Use MVC's convention-based approach to writing and wiring up controllers.
 * Use .NET Core's built-in `IServiceCollection` for dependency injection.
@@ -151,7 +156,7 @@ e.g.
 
 # Javascript
 
-There are some slight differences over Chromely in the javascript you should use. The response is no longer wrapped in a `CallbackResponseStruct`, so no need to parse again.
+There are some slight differences over Chromely in the javascript you should use. The response is no longer wrapped in a `CallbackResponseStruct`, so just parse the object firectly.
 
 Assuming you used the defaults of `boundControllerAsync` and async `true`, your http services script could look like this:
 
@@ -168,6 +173,11 @@ function boundObjectPostJson(url, parameters, postData, response) {
 
 export function boundObjectGet(url, parameters, callback) {
 	boundObjectGetJson(url, parameters, response => {
+		// version 4.0.0.1 returns a string
+		// this is not needed in 4.0.0.2
+		if (typeof response === 'string') {
+			response = JSON.parse(response);
+		}
 		if (response.ReadyState == 4 && response.Status == 200) {
 			callback(response.Data);
 		} else {
@@ -178,6 +188,11 @@ export function boundObjectGet(url, parameters, callback) {
 
 export function boundObjectPost(url, parameters, postData, callback) {
 	boundObjectPostJson(url, parameters, postData, response => {
+		// version 4.0.0.1 returns a string
+		// this is not needed in 4.0.0.2
+		if (typeof response === 'string') {
+			response = JSON.parse(response);
+		}
 		if (response.ReadyState == 4 && response.Status == 200) {
 			callback(response.Data);
 		} else {
@@ -189,4 +204,4 @@ export function boundObjectPost(url, parameters, postData, callback) {
 
 # License
 
-Chromely.Mvc is available under the **MIT License**. See LICENSE.txt
+Chromely.Mvc is available under the **MIT License**. See Chromely.Mvc/LICENSE.txt

@@ -10,20 +10,30 @@ Install-Package Chromely.Mvc
 
 # Known Issues
 
+If you are on Version 4.0.0.1 it is recommended to upgrade to 4.0.0.2.
+
+Versions 4.0.0.1 has an issue for methods returning `Task<IEnumerable<T>>` or when casting to `Task<object>` in general.
+
 Versions 4.0.0.1 and below have an issue where the returned value from the `boundControllerAsync` response callback is a string instead of an object. See the [Javascript](#Javascript) section.
 
+Routing is very basic as of now, and only supports simple routing without defaults.  This may change if there is demand. Also, pull requests are welcome!
 
 # Features
 * Use MVC's convention-based approach to writing and wiring up controllers.
-* Use .NET Core's built-in `IServiceCollection` for dependency injection.
+* Conventional routing using attributes `HttpGet`, `HttpPost`, etc.
 * Constructor and property injection on controller classes.
+* Return `Task<T>` from your action methods.
 * Controller classes are transient services - created for each request.
-* Annotate Controller action methods with `HttpGet`, `HttpPost`, etc.
+* Use .NET Core's built-in `IServiceCollection` for dependency injection.
 * Model binding, so you can create your action methods like this:
 
 ```csharp
 public IEnumerable<WeatherData> GetWeatherForecast(DateTime date, string location)
 ```
+
+# Demos 
+
+https://github.com/RupertAvery/Chromely.Mvc.Demos
 
 # Comparison
 

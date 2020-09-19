@@ -1,22 +1,20 @@
 # Chromely.Mvc
 
-Chromely.Mvc is an add-on to [Chromely](https://github.com/chromelyapps/Chromely) that allows you to create controllers using ASP.NET MVC conventions.
+Chromely.Mvc is an add-on to [Chromely](https://github.com/chromelyapps/Chromely) that allows you to write controllers using ASP.NET MVC convention.
 
 # Nuget
 
 ```
-Install-Package Chromely.Mvc
+Install-Package Chromely.Mvc -version 5.0.0.6
 ```
 
 # Known Issues
 
-If you are on Version 4.0.0.1 it is recommended to upgrade to 4.0.0.2.
-
-Versions 4.0.0.1 has an issue for methods returning `Task<IEnumerable<T>>` or when casting to `Task<object>` in general.
-
-Versions 4.0.0.1 and below have an issue where the returned value from the `boundControllerAsync` response callback is a string instead of an object. See the [Javascript](#Javascript) section.
-
 Routing is very basic as of now, and only supports simple routing without defaults.  This may change if there is demand. Also, pull requests are welcome!
+
+# What's new
+
+Updated to Chromely.Core 5.0.0.6 and Chromely 5.0.83
 
 # Features
 * Use MVC's convention-based approach to writing and wiring up controllers.
@@ -31,13 +29,18 @@ Routing is very basic as of now, and only supports simple routing without defaul
 public IEnumerable<WeatherData> GetWeatherForecast(DateTime date, string location)
 ```
 
-# Demos 
+instead of this:
 
-https://github.com/RupertAvery/Chromely.Mvc.Demos
+```csharp
+public ChromelyResponse GetWeatherForecast(ChromelyRequest request)
+```
 
 # Comparison
 
 ## Chromely
+
+Chromely requires you to registers routes to specific methods. The method argument and return value _must_ be `ChromelyRequest` and `ChromelyReponse`.. This requires a lot of bolierplate code, and requires you to parse the request yourself.
+
 ```csharp
 [ControllerProperty(Name = "WeatherController", Route = "weathercontroller")]
 public class WeatherController : ChromelyController
@@ -73,144 +76,114 @@ public class WeatherController : Controller
 		return weatherForecast;
 	}
 }
-
 ```
-
 
 # Usage
 
-In your `Program.cs`, create your Chromely window using `ChromelyConfiguration` as usual, except for registering a JsHandler.
+Create a class that inherits from `ChromelyMvcBasicApp`. Override the `Configure` method, and register your services. You _must_ call `base.Configure(container)`. Call `container.AddControllers()` to register the controllers in your assembly. The controllers must inherit from `Chromely.Mvc.Controller`.
+
+Controller actions will be added to the route as `{controller}/{action}`, where `{controller}` by convention is the controller class name with the word "Controller" removed.
+
+So if you have a `DemoController` class with a `GetMovies` method, you can access it via the route `demo/getmovies`
 
 ```csharp
-var config = ChromelyConfiguration
-	.Create()
-	.WithAppArgs(args)
-	.WithHostMode(WindowState.Normal, true)
-	.WithHostTitle("delphi")
-	.WithHostIconFile("chromely.ico")
-	.WithStartUrl(startUrl)
-	.WithLogFile("logs\\chromely.cef_new.log")
-	.WithLogSeverity(LogSeverity.Info)
-	.UseDefaultLogger()
-	.UseDefaultResourceSchemeHandler("local", string.Empty)
-	.UseDefaultHttpSchemeHandler("http", "chromely.com");
-```
-
-Then use `MvcConfigurationBuilder` to initialize the `IServiceCollection` and setup the MVC Services. 
-
-```csharp
-MvcConfigurationBuilder
-	.Create()
-	.AddChromelyMvcWithDefaultRoutes()
-	.UseControllersFromAssembly(Assembly.GetExecutingAssembly())
-	// Optional, register any additional services fluently
-	.RegisterServices((serviceCollection) =>
-	{
-		serviceCollection.AddTransient<ITimesheetBL, TimesheetBL>();
-		serviceCollection.AddSingleton<ILocalDataBL, LocalDataBL>();
-		serviceCollection.AddSingleton<IOracleService, OracleService>();
-	})
-	.UseDefaultMvcBoundObject(config);
-
-
-using (var window = ChromelyWindow.Create(config))
+public class DemoChromelyApp : ChromelyMvcBasicApp
 {
-	// nothing else needed here, UseControllersFromAssembly registers controllers and 
-	// UseDefaultMvcBoundObject() sets up the entry point for the controllers when requests come in
-	return window.Run(args);
+	public override void Configure(IServiceCollection container)
+	{
+		base.Configure(container);
+		// Register any services that will be injected into the controllers, or other services
+		container.AddTransient<IInfoService, InfoService>();
+		container.AddTransient<IMovieService, MovieService>();
+		// Register the controllers in the calling assembly
+		container.AddControllers();
+	}
 }
 ```
 
-# Configuration Details
-
-`MvcConfigurationBuilder.Create()` internally creates an `IServiceCollection`.
-
-## Adding MVC Services and Routing 
-
-`AddMvc` must be called and supplied with a route pattern, similar to mvc. This allows you to tailor your URLs.  This is very basic as of now and only supports `{controller}` and `{action}` tokens. 
+In your `Program.cs` `Main` method, build and run your application using `MvcAppBuilder`.
 
 ```csharp
-.AddChromelyMvc((routes) =>
+static void Main(string[] args)
 {
-	routes.MapRoute("default", "/{controller}/{action}");
-})
-```
-
-Alternatively, you can use the provided shortcut:
-
-```csharp
-.AddChromelyMvcWithDefaultRoutes()
-```
-
-## Controller Registration 
-
-`UseControllersFromAssembly` crawls the supplied assembly and registers any classes that inherit from `Chromwly.Mvc.Controller` on the ServiceCollection.
-
-```csharp
-.UseControllersFromAssembly(Assembly.GetExecutingAssembly())
-```
-
-The default controller factory uses MVC convention when resolving controllers, i.e. if the class name ends with `Controller`, the controller factory will use the class name without the `Controller` suffix.
-
-e.g.
-
-`WeatherForecastController` will resolve to `/weatherforecast`
-
-## MVC ChromelyJSHandler
-
-`UseDefaultMvcBoundObject` registers `MvcCefSharpBoundObject` as a `ChromelyJsHandler` with the supplied `ChromelyConfiguration`. It defaults to `boundControllerAsync` as the object name to bind, and async to `true`.
-
-```csharp
-.UseDefaultMvcBoundObject(config);
+	MvcAppBuilder
+		.Create()
+		.UseApp<DemoChromelyApp>()
+		.Build()
+		.Run(args);
+}
 ```
 
 # Javascript
 
-There are some slight differences over Chromely in the javascript you should use. The response is no longer wrapped in a `CallbackResponseStruct`, so just parse the object firectly.
-
-Assuming you used the defaults of `boundControllerAsync` and async `true`, your http services script could look like this:
-
+A `cefQuery` method will be attached to the `window` object.  You can use the following code as a service that you can call from your code using Promises.
 
 ```js
-function boundObjectGetJson(url, parameters, response) {
-    boundControllerAsync.getJson(url, parameters, response);
+// chromely.service.js
+
+export function get(url, parameters) {
+    return new Promise(function (resolve, reject) {
+        var request = {
+            "method": "GET",
+            "url": url,
+            "parameters": parameters,
+            "postData": null
+        };
+
+        messageRouterQuery(request, resolve, reject);
+    });
 }
 
-function boundObjectPostJson(url, parameters, postData, response) {
-    boundControllerAsync.postJson(url, parameters, postData, response);
+export function post(url, parameters, postData) {
+    return new Promise(function (resolve, reject) {
+        var request = {
+            "method": "POST",
+            "url": url,
+            "parameters": parameters,
+            "postData": postData
+        };
+
+        messageRouterQuery(request, resolve, reject);
+    });
 }
 
-
-export function boundObjectGet(url, parameters, callback) {
-	boundObjectGetJson(url, parameters, response => {
-		// version 4.0.0.1 returns a string
-		// this is not needed in 4.0.0.2
-		if (typeof response === 'string') {
-			response = JSON.parse(response);
-		}
-		if (response.ReadyState == 4 && response.Status == 200) {
-			callback(response.Data);
-		} else {
-			console.log("An error occurs during message routing. With ur:" + url + ". Response received:" + response);
-		}
-	});
+function messageRouterQuery(request, success, error) {
+    window.cefQuery({
+        request: JSON.stringify(request),
+        onSuccess: (response) => {
+            var jsonData = JSON.parse(response);
+            if (jsonData.ReadyState == 4 && jsonData.Status == 200) {
+                if (success) success(jsonData.Data);
+            } else {
+                if (error) error(jsonData);
+                console.log("Error" + jsonData);
+            }
+        },
+        onFailure: (err, msg) => {
+            if (error) error({ err, msg });
+            console.log(err, msg);
+        }
+    });
 }
 
-export function boundObjectPost(url, parameters, postData, callback) {
-	boundObjectPostJson(url, parameters, postData, response => {
-		// version 4.0.0.1 returns a string
-		// this is not needed in 4.0.0.2
-		if (typeof response === 'string') {
-			response = JSON.parse(response);
-		}
-		if (response.ReadyState == 4 && response.Status == 200) {
-			callback(response.Data);
-		} else {
-			console.log("An error occurs during message routing. With ur:" + url + ". Response received:" + response);
-		}
-	});
-}
 ```
+
+then in your code:
+
+```js
+var chromelyService = require('./services/chromely.service');
+
+...
+
+chromelyService.get('/demo/getmovies', null)
+	.then((data) => {
+		this.movies = data;
+	});
+```
+
+# Demos 
+
+https://github.com/RupertAvery/Chromely.Mvc.Demos
 
 # License
 

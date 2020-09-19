@@ -1,6 +1,4 @@
-﻿using Chromely.Core.RestfulService;
-
-namespace Chromely.Mvc
+﻿namespace Chromely.Mvc
 {
     public interface IActionBuilder
     {

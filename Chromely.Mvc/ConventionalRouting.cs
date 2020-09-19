@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Chromely.Core.Network;
 using Chromely.Mvc.Attributes;
 
 namespace Chromely.Mvc
 {
     public class ConventionalRouting
     {
-        private RouteCollection _routeCollection;
-        private IControllerFactory _controllerFactory;
+        private readonly RouteCollection _routeCollection;
+        private readonly IControllerFactory _controllerFactory;
 
         public ConventionalRouting(IControllerFactory controllerFactory, RouteCollection routeCollection)
         {
@@ -45,25 +46,25 @@ namespace Chromely.Mvc
                     {
                         switch (requestContext.Method)
                         {
-                            case Methods.Get:
+                            case Method.GET:
                                 actions = new[] { "index", "get" };
                                 break;
-                            case Methods.Post:
+                            case Method.POST:
                                 actions = new[] { "post" };
                                 break;
-                            case Methods.Put:
+                            case Method.PUT:
                                 actions = new[] { "put" };
                                 break;
-                            case Methods.Delete:
+                            case Method.DELETE:
                                 actions = new[] { "delete" };
                                 break;
-                            case Methods.Options:
+                            case Method.OPTIONS:
                                 actions = new[] { "options" };
                                 break;
-                            case Methods.Head:
+                            case Method.HEAD:
                                 actions = new[] { "head" };
                                 break;
-                            case Methods.Merge:
+                            case Method.MERGE:
                                 actions = new[] { "merge" };
                                 break;
                         }
@@ -93,7 +94,7 @@ namespace Chromely.Mvc
         }
 
 
-        private MethodInfo GetMatchingAction(string method, Type controllerType, string action)
+        private MethodInfo GetMatchingAction(Method method, Type controllerType, string action)
         {
             foreach (var methodInfo in controllerType.GetMethods())
             {
@@ -101,7 +102,7 @@ namespace Chromely.Mvc
                 {
                     if (attribute is HttpVerbAttribute verbAttribute)
                     {
-                        if (string.Equals(verbAttribute.Method, method, StringComparison.InvariantCultureIgnoreCase)
+                        if (string.Equals(verbAttribute.Method, Enum.GetName(typeof(Method), method), StringComparison.InvariantCultureIgnoreCase)
                             && (
                                 string.Equals(action, methodInfo.Name, StringComparison.InvariantCultureIgnoreCase)
                                 || (verbAttribute.Action != null && string.Equals(action, verbAttribute.Action, StringComparison.InvariantCultureIgnoreCase))
@@ -115,7 +116,7 @@ namespace Chromely.Mvc
 
             foreach (var methodInfo in controllerType.GetMethods())
             {
-                if (string.Equals(methodInfo.Name, method, StringComparison.InvariantCultureIgnoreCase))
+                if (string.Equals(methodInfo.Name, Enum.GetName(typeof(Method), method), StringComparison.InvariantCultureIgnoreCase))
                 {
                     return methodInfo;
                 }

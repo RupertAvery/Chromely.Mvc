@@ -2,7 +2,7 @@
 {
     public class HttpPostAttribute : HttpVerbAttribute
     {
-        public override string Method { get; } = Methods.Post;
+        public override string Method { get; } = "POST";
 
         public HttpPostAttribute()
         {

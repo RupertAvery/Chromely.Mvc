@@ -3,7 +3,7 @@
 
     public class HttpGetAttribute : HttpVerbAttribute
     {
-        public override string Method { get; } = Methods.Get;
+        public override string Method { get; } = "GET";
 
         public HttpGetAttribute()
         {

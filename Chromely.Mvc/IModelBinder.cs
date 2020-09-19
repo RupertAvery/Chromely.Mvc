@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Chromely.Mvc
 {
@@ -7,7 +8,8 @@ namespace Chromely.Mvc
     {
         object BindToArray(Type arrayType, object value);
         object BindToModel(Type type, object value);
-        object BindToObject(Type type, IDictionary<string, object> value);
+        object BindToModel(Type type, JsonElement value);
+        object BindToModel(Type type, IDictionary<string, object> value);
         object GetBoundValue(Type type, string name, IDictionary<string, object> valueLookup);
     }
 }

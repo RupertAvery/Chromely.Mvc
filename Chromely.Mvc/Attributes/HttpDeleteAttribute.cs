@@ -2,7 +2,7 @@
 {
     public class HttpDeleteAttribute : HttpVerbAttribute
     {
-        public override string Method { get; } = Methods.Delete;
+        public override string Method { get; } = "DELETE";
 
         public HttpDeleteAttribute()
         {

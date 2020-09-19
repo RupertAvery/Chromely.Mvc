@@ -1,24 +1,38 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Chromely.Mvc
 {
     public class DefaultControllerActivator : IControllerActivator
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceCollection _serviceCollection;
+        private IServiceProvider _serviceProvider;
 
-        public DefaultControllerActivator(IServiceProvider serviceProvider)
+        private IServiceProvider ServiceProvider
         {
-            _serviceProvider = serviceProvider;
+            get
+            {
+                if (_serviceProvider == null)
+                {
+                    _serviceProvider = _serviceCollection.BuildServiceProvider();
+                }
+
+                return _serviceProvider;
+            }
+        }
+
+        public DefaultControllerActivator(IServiceCollection serviceCollection)
+        {
+            _serviceCollection = serviceCollection;
         }
 
         public object Create(ActionContext actionContext)
         {
-            return _serviceProvider.GetService(actionContext.ControllerType);
+            return ServiceProvider.GetService(actionContext.ControllerType);
         }
 
         public object Release(ActionContext actionContext, object controller)
         {
-            // 
             return null;
         }
     }

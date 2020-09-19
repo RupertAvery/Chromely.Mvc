@@ -1,47 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Chromely.Core.Network;
 using global::CefSharp;
 
 namespace Chromely.Mvc
 {
-    public class DefaultRequestHandler : IRequestHandler
+    /// <summary>
+    /// A request task runner that performs ASP.NET MVC-style model binding, so the Controller Action arguments do not need to be of type <see cref="ChromelyRequest"/>
+    /// </summary>
+    public class DefaultMvcRequestTaskRunner : IChromelyRequestTaskRunner
     {
-        private IActionBuilder _actionBuilder;
-        private IModelBinder _modelBinder;
+        private readonly IActionBuilder _actionBuilder;
+        private readonly IModelBinder _modelBinder;
 
-        public DefaultRequestHandler(IActionBuilder actionBuilder, IModelBinder modelBinder)
+        public DefaultMvcRequestTaskRunner(IActionBuilder actionBuilder, IModelBinder modelBinder)
         {
             _actionBuilder = actionBuilder;
             _modelBinder = modelBinder;
         }
 
-        public Task<object> RunAsync(string method, string url, object parameters, object postData)
+        public ChromelyResponse Run(ChromelyRequest request)
         {
-            return ExcuteRouteAsync(method, url, parameters, postData);
+            var parameters = request.Parameters ?? request.RoutePath.Path.GetParameters()?.ToObjectDictionary();
+            var postData = request.PostData;
+
+            return ExcuteRoute(request.RoutePath, parameters, postData);
         }
 
-        public object Run(string method, string url, object parameters, object postData)
+        public Task<ChromelyResponse> RunAsync(ChromelyRequest request)
         {
-            return ExcuteRoute(method, url, parameters, postData);
+            var parameters = request.Parameters ?? request.RoutePath.Path.GetParameters()?.ToObjectDictionary();
+            var postData = request.PostData;
+
+            return ExcuteRouteAsync(request.RoutePath, parameters, postData);
         }
 
-        private RequestContext GetRequestContext(string method, string requestUrl)
+        public ChromelyResponse Run(string requestId, RoutePath routePath, IDictionary<string, string> parameters, object postData, string requestData)
         {
-            var querySplitIndex = requestUrl.IndexOf('?');
+            if (routePath == null || string.IsNullOrWhiteSpace(routePath?.Path))
+            {
+                return GetBadRequestResponse(null);
+            }
+
+            return ExcuteRoute(routePath, parameters, postData, requestId);
+        }
+
+
+        public Task<ChromelyResponse> RunAsync(string requestId, RoutePath routePath, IDictionary<string, string> parameters, object postData, string requestData)
+        {
+            if (routePath == null || string.IsNullOrWhiteSpace(routePath?.Path))
+            {
+                return Task.FromResult(GetBadRequestResponse(null));
+            }
+
+            return ExcuteRouteAsync(routePath, parameters, postData, requestId);
+        }
+
+        public Task<ChromelyResponse> RunAsync(string method, string path, IDictionary<string, string> parameters, object postData)
+        {
+            var routePath = new RoutePath(method, path);
+            if (string.IsNullOrWhiteSpace(routePath?.Path))
+            {
+                return Task.FromResult(GetBadRequestResponse(null));
+            }
+
+            return ExcuteRouteAsync(routePath, parameters, postData);
+        }
+
+        public ChromelyResponse Run(string method, string path, IDictionary<string, string> parameters, object postData)
+        {
+            var routePath = new RoutePath(method, path);
+            if (string.IsNullOrWhiteSpace(routePath?.Path))
+            {
+                return GetBadRequestResponse(null);
+            }
+
+            return ExcuteRoute(routePath, parameters, postData);
+        }
+
+        private RequestContext GetRequestContext(Method method, string path, string requestId = null)
+        {
+            var querySplitIndex = path.IndexOf('?');
             var url = "";
             List<KeyValuePair<string, string>> queryParameters = null;
 
             if (querySplitIndex == -1)
             {
-                url = requestUrl;
+                url = path;
             }
             else
             {
-                url = requestUrl.Substring(0, querySplitIndex);
-                queryParameters = requestUrl
+                url = path.Substring(0, querySplitIndex);
+                queryParameters = path
                     .Substring(querySplitIndex + 1)
                     .Split(new[] { '&' })
                     .Select(x =>
@@ -76,44 +132,107 @@ namespace Chromely.Mvc
                 Method = method,
                 Url = url,
                 QueryParameters = queryParameters,
+                RequestId = requestId
             };
         }
 
-        private object ExcuteRoute(string method, string url, object parameters, object postData)
+        private ChromelyResponse ExcuteRoute(RoutePath routePath, IDictionary<string, string> parameters, object postData, string requestId = null)
         {
-            var requestContext = GetRequestContext(method, url);
-            var action = _actionBuilder.BuildAction(requestContext);
 
-            var arguments = BindParameters(action, requestContext, parameters, postData);
+            object result = null;
+            var status = 200;
+            var statusText = "OK";
 
-            return action.Invoke(arguments);
-        }
-
-        private async Task<object> ExcuteRouteAsync(string method, string url, object parameters, object postData)
-        {
-            var requestContext = GetRequestContext(method, url);
-            var action = _actionBuilder.BuildAction(requestContext);
-
-            var arguments = BindParameters(action, requestContext, parameters, postData);
-
-            object result;
-
-            if (action.IsAsync)
+            try
             {
-                var asyncObject = (Task)action.Invoke(arguments);
-                var taskType = asyncObject.GetType();
-                await asyncObject.ConfigureAwait(false);
-                var resultProperty = taskType.GetProperty("Result");
-                result = resultProperty.GetValue(asyncObject);
-            }
-            else
-            {
+                var requestContext = GetRequestContext(routePath.Method, routePath.Path, requestId);
+                var action = _actionBuilder.BuildAction(requestContext);
+
+                var arguments = BindParameters(action, requestContext, parameters, postData);
+
                 result = action.Invoke(arguments);
             }
+            catch (RouteException re)
+            {
+                result = re.Message;
+                status = 404;
+                statusText = "Not Found";
+            }
+            catch (Exception e)
+            {
+                result = e.Message;
+                status = 500;
+                statusText = "Server Error";
+            }
 
-            return result;
+            return new ChromelyResponse()
+            {
+                ReadyState = (int)ReadyState.ResponseIsReady,
+                Status = status,
+                StatusText = (string.IsNullOrWhiteSpace(statusText) && (status == (int)HttpStatusCode.OK))
+                    ? "OK"
+                    : statusText,
+                Data = result
+            };
         }
 
+        private async Task<ChromelyResponse> ExcuteRouteAsync(RoutePath routePath, object parameters, object postData, string requestId = null)
+        {
+            object result = null;
+            var status = 200;
+            var statusText = "OK";
+
+            try
+            {
+                var requestContext = GetRequestContext(routePath.Method, routePath.Path, requestId);
+                var action = _actionBuilder.BuildAction(requestContext);
+
+                var arguments = BindParameters(action, requestContext, parameters, postData);
+
+                if (action.IsAsync)
+                {
+                    result = await action.InvokeAsync(arguments);
+                    if (result != null)
+                    {
+                        var resultType = result.GetType();
+                        if (resultType.Name == "VoidTaskResult")
+                        {
+                            result = null;
+                        }
+                    }
+                }
+                else
+                {
+                    result = action.Invoke(arguments);
+                }
+            }
+            catch (Exception e)
+            {
+                result = e.Message;
+                status = 500;
+                statusText = "Server Error";
+            }
+
+            return new ChromelyResponse()
+            {
+                ReadyState = (int)ReadyState.ResponseIsReady,
+                Status = status,
+                StatusText = (string.IsNullOrWhiteSpace(statusText) && (status == (int)HttpStatusCode.OK))
+                    ? "OK"
+                    : statusText,
+                Data = result
+            };
+        }
+
+        /// <summary>
+        /// Returns a list of objects mapped to the values in the parameters or postdata in the order of the matched actions's arguments.
+        /// Objects will be parsed into the types declared by the method arguments
+        /// </summary>
+        /// <param name="action">The controller action that matches the route</param>
+        /// <param name="requestContext">The request context</param>
+        /// <param name="parameters">A collection of key value pairs</param>
+        /// <param name="postData">The data posted by Cef from the browser</param>
+        /// <returns></returns>
         public object[] BindParameters(MvcAction action, RequestContext requestContext, object parameters, object postData)
         {
             var methodInfo = action.ActionContext.ActionMethod;
@@ -121,8 +240,8 @@ namespace Chromely.Mvc
 
             var actionParameters = methodInfo.GetParameters();
 
-            var isPost = action.ActionContext.Request.Method == Methods.Post;
-
+            // TODO: Handle case where same parameter appears in the querystring and post data
+            
             if (requestContext.QueryParameters != null)
             {
                 // TODO: handle multiple values for one key
@@ -134,62 +253,56 @@ namespace Chromely.Mvc
                 }
             }
 
-            if (isPost)
+            if (parameters != null)
             {
-                if (postData is ExpandoObject || postData is List<ExpandoObject> || postData is List<Object>)
+                var paramlookup = (IDictionary<string, object>)((IDictionary<string, string>)parameters).ToDictionary(x => x.Key, x => (object)x.Value);
+
+
+                foreach (var parameter in actionParameters.OrderBy(x => x.Position))
                 {
-                    if (actionParameters.Length == 1)
+                    var boundValue = _modelBinder.GetBoundValue(parameter.ParameterType, parameter.Name, paramlookup);
+                    arguments.Add(boundValue);
+                }
+            }
+
+            if (postData != null)
+            {
+                if (actionParameters.Length == 1)
+                {
+                    switch (postData)
                     {
-                        arguments.Add(_modelBinder.BindToModel(actionParameters[0].ParameterType, postData));
-                    }
-                    else
-                    {
-                        throw new NotImplementedException("Does not support POST with multiple parameters");
+                        case JsonElement data:
+                            arguments.Add(_modelBinder.BindToModel(actionParameters[0].ParameterType, data));
+                            break;
+                        case ExpandoObject _:
+                        case List<ExpandoObject> _:
+                        case List<object> _:
+                            arguments.Add(_modelBinder.BindToModel(actionParameters[0].ParameterType, postData));
+                            break;
+                        default:
+                            throw new Exception($"Unsupported type: {postData.GetType()}");
                     }
                 }
                 else
                 {
-                    throw new NotImplementedException("Unsupported type");
+                    throw new Exception("POST with zero or multiple parameters is not supported");
                 }
             }
-            else
-            {
 
-
-                if (parameters is ExpandoObject)
-                {
-
-                    var paramlookup = (IDictionary<string, object>)parameters;
-
-
-                    foreach (var parameter in actionParameters.OrderBy(x => x.Position))
-                    {
-                        var boundValue = _modelBinder.GetBoundValue(parameter.ParameterType, parameter.Name, paramlookup);
-                        arguments.Add(boundValue);
-                    }
-                }
-                else
-                {
-                    if (parameters != null)
-                    {
-                        throw new NotImplementedException("Unsupported type");
-                    }
-                }
-            }
 
             return arguments.ToArray();
         }
 
-        private static string GetPostData(IRequest request)
+        private ChromelyResponse GetBadRequestResponse(string requestId)
         {
-            var elements = request?.PostData?.Elements;
-            if (elements == null || (elements.Count == 0))
+            return new ChromelyResponse
             {
-                return string.Empty;
-            }
-
-            var dataElement = elements[0];
-            return dataElement.GetBody();
+                RequestId = requestId,
+                ReadyState = (int)ReadyState.ResponseIsReady,
+                Status = (int)System.Net.HttpStatusCode.BadRequest,
+                StatusText = "Bad Request"
+            };
         }
+
     }
 }

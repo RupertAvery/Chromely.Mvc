@@ -1,4 +1,4 @@
-﻿using Chromely.Core.RestfulService;
+﻿using Chromely.Core;
 
 namespace Chromely.Mvc
 {
@@ -21,8 +21,7 @@ namespace Chromely.Mvc
             var controllerInstance = (Controller)_controllerActivator.Create(actionContext);
             var controllerContext = new ControllerContext(controllerInstance);
 
-            controllerInstance.ControllerContext = controllerContext;
-            controllerInstance.RequestContext = requestContext;
+            controllerInstance.Request = requestContext;
 
             return new MvcAction(actionContext, controllerContext);
         }

@@ -10,6 +10,5 @@ namespace Chromely.Mvc
         IEnumerable<Type> Controllers { get; }
         void Add(string key, Type type);
         void Add(Type type);
-        IEnumerable<Type> ScanAssembly(Assembly assembly);
     }
 }

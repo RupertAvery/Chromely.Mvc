@@ -2,7 +2,7 @@
 {
     public class HttpPutAttribute : HttpVerbAttribute
     {
-        public override string Method { get; } = Methods.Put;
+        public override string Method { get; } = "PUT";
 
         public HttpPutAttribute()
         {

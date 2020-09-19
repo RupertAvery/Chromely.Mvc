@@ -2,8 +2,7 @@
 {
     public abstract class Controller
     {
-        public ControllerContext ControllerContext { get; set; }
-        public RequestContext RequestContext { get; set; }
+        public RequestContext Request { get; set; }
 
     }
 }

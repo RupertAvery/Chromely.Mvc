@@ -20,5 +20,11 @@ namespace Tests
             return JsonConvert.DeserializeObject<List<ExpandoObject>>(json, expConverter);
         }
 
+        public static object ToJsonElement(this String json)
+        {
+            return System.Text.Json.JsonDocument.Parse(json).RootElement;
+        }
+
+
     }
 }

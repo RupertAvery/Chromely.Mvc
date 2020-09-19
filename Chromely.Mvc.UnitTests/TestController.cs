@@ -9,6 +9,13 @@ namespace Tests
 {
     public class TestController : Controller
     {
+        private readonly IDataService _dataService;
+
+        public TestController(IDataService dataService)
+        {
+            _dataService = dataService;
+        }
+
         [HttpGet]
         public void Index()
         {
@@ -16,9 +23,9 @@ namespace Tests
         }
 
         [HttpGet("custom-action")]
-        public void CustomActionTest()
+        public string CustomActionTest()
         {
-            // Do nothing
+            return "Success!";
         }
 
         public void Post(Person person)
@@ -112,48 +119,25 @@ namespace Tests
         [HttpGet]
         public Person GetPerson()
         {
-            var person = new Person()
-            {
-                Name = "Rupert Avery",
-                Age = 21,
-                BirthDate = new DateTime(1982, 06, 12)
-            };
-
-            return person;
+            return _dataService.GetPerson();
         }
 
         [HttpGet]
         public Task<Person> GetPersonAsync()
         {
-            return Task.FromResult(GetPerson());
+            return Task.FromResult(_dataService.GetPerson());
         }
 
         [HttpGet]
         public IEnumerable<Person> GetPeople()
         {
-            var results = new List<Person>()
-            {
-                new Person()
-                {
-                    Name = "Rupert Avery",
-                    Age = 21,
-                    BirthDate = new DateTime(1982, 06, 12)
-                },
-                new Person()
-                {
-                    Name = "Jemma Avery",
-                    Age = 18,
-                    BirthDate = new DateTime(1989, 08, 27)
-                }
-            };
-
-            return results;
+            return _dataService.GetPeople();
         }
 
         [HttpGet]
         public Task<IEnumerable<Person>> GetPeopleAsync()
         {
-            return Task.FromResult(GetPeople());
+            return Task.FromResult(_dataService.GetPeople());
         }
 
 

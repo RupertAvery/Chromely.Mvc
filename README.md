@@ -2,6 +2,10 @@
 
 Chromely.Mvc is an add-on to [Chromely](https://github.com/chromelyapps/Chromely) that allows you to write controllers using ASP.NET MVC convention.
 
+# Demos 
+
+https://github.com/RupertAvery/Chromely.Mvc.Demos
+
 # Nuget
 
 ```
@@ -181,9 +185,6 @@ chromelyService.get('/demo/getmovies', null)
 	});
 ```
 
-# Demos 
-
-https://github.com/RupertAvery/Chromely.Mvc.Demos
 
 # License
 

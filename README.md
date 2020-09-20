@@ -46,11 +46,11 @@ public ChromelyResponse GetWeatherForecast(ChromelyRequest request)
 Chromely requires you to registers routes to specific methods. The method argument and return value _must_ be `ChromelyRequest` and `ChromelyReponse`.. This requires a lot of bolierplate code, and requires you to parse the request yourself.
 
 ```csharp
-[ControllerProperty(Name = "WeatherController", Route = "weathercontroller")]
+[ControllerProperty(Name = "WeatherController", Route = "weather")]
 public class WeatherController : ChromelyController
 {
 	public WeatherController(){
-            this.RegisterGetRequest("/weathercontroller/movies", this.GetMovies);
+            this.RegisterGetRequest("/weather/getweatherforecast", this.GetWeatherForecast);
 	}
 
 	public ChromelyReponse GetWeatherForecast(ChromelyRequest request)

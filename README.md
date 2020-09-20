@@ -50,7 +50,7 @@ Chromely requires you to registers routes to specific methods. The method argume
 public class WeatherController : ChromelyController
 {
 	public WeatherController(){
-            this.RegisterGetRequest("/weather/getweatherforecast", this.GetWeatherForecast);
+            this.RegisterGetRequest("/weather/weatherforecast", this.GetWeatherForecast);
 	}
 
 	public ChromelyReponse GetWeatherForecast(ChromelyRequest request)
@@ -72,7 +72,7 @@ public class WeatherController : ChromelyController
 ```csharp
 public class WeatherController : Controller
 {
-	[HttpGet]
+	[HttpGet("weatherforecast")]
 	public IEnumerable<WeatherData> GetWeatherForecast(DateTime date, string location)
 	{
 		var weatherForecast = new List<WeatherData>();
